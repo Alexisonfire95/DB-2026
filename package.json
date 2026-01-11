@@ -5,9 +5,6 @@
     "up": "docker-compose --env-file .env up --build -d",
     "down": "docker-compose --env-file .env down",
     "clear": "rm -rf ./data",
-    "drop": "docker exec -i labs26.database psql -U admin -d labsdb26 -c \"DROP SCHEMA public CASCADE; CREATE SCHEMA public; GRANT ALL ON SCHEMA public TO public;\"",
-    "lab2:ddl": "docker exec -i labs26.database psql -U admin -d labsdb < ./lab2/createTable.sql",
-    "lab2:seed": "docker exec -i labs26.database psql -U admin -d labsdb < ./lab2/seed.sql",
-    "lab5:ddl": "docker exec -i labs26.database psql -U admin -d labsdb < ./lab5/ddl_normalized.sql"
+    "drop": "sh ./db-client.sh \"DROP SCHEMA public CASCADE; CREATE SCHEMA public; GRANT ALL ON SCHEMA public TO public;\""
   }
 }

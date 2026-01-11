@@ -1,6 +1,6 @@
 services:
   db:
-    container_name: labs26.database
+    container_name: labs.database
     image: postgres:16.4-alpine
     restart: always
     environment:
