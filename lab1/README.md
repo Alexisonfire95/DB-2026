@@ -2,6 +2,10 @@
 
 ## 1. Вимоги для системи
 
+### Загальні вимоги до функціональності системи:
+
+
+
 ### Вимоги до функціональності для Покупця (Buyer):
 
 1. Система повинна надавати можливість реєстрації та входу з використанням електронної пошти та пароля. 
@@ -22,7 +26,7 @@
 
 ### Вимоги до функціональності для Адміністратора (Admin):
 
-1. Система повинна надавати можливість керувати категоріями товарів (створення, редагування). 
+1. Адміністратор повинен мати можливість керувати категоріями товарів (створення, редагування). 
 2. Адміністратор повинен мати можливість блокувати (видаляти через Soft Delete) користувачів або товари, що порушують правила. 
 3. Система повинна автоматично розраховувати комісію платформи (platform fee) з кожного успішного замовлення. 
 4. Адміністратор повинен мати доступ до історії цін товарів для аналітики.
@@ -55,6 +59,7 @@
 - Назва (name)
 - Slug (slug - унікальний ідентифікатор для URL)
 - Опис (description)
+- Батьківська категорія (parent_category_id)
 
 
 **Product (Товар)**
@@ -65,6 +70,7 @@
 - Залишок (stock)
 - Артикул (sku)
 - Активний (is_active)
+- Продавець (seller_id)
 - Версія (version - для Optimistic Locking)
 - Дата останньої зміни (створення/оновлення/видалення)
 
@@ -110,23 +116,23 @@
 
 **users**
 - id - PK, Serial 
-- email - String, Unique, Not Null 
-- password_hash - String, Not Null 
+- email - Varchar, Unique, Not Null 
+- password_hash - Varchar, Not Null 
 - role - Enum ('BUYER', 'SELLER', 'ADMIN'), Default 'BUYER' 
 - created_at - Timestamp, Default Now 
 - deleted_at - Timestamp, Nullable
 
 **user_profiles** 
 - user_id - PK, FK (to users.id), Unique 
-- first_name - String, Not Null 
-- last_name - String, Not Null 
-- phone - String, Nullable 
-- address - Text, Nullable
+- first_name - Varchar, Not Null 
+- last_name - Varchar, Not Null 
+- phone - Varchar, Nullable 
+- address - Varchar, Nullable
 
 **categories** 
 - id - PK, Serial 
-- name - String, Not Null 
-- slug - String, Unique, Not Null 
+- name - Varchar, Not Null 
+- slug - Varchar, Unique, Not Null 
 - description - Text, Nullable
 
 
@@ -134,11 +140,11 @@
 - id - PK, Serial 
 - category_id - FK (to categories.id)
 - seller_id - FK (to users.id)
-- name - String, Not Null 
+- name - Varchar, Not Null 
 - description - Text, Not Null 
 - price - Decimal(10,2), Not Null 
 - stock - Integer, Check(>=0)
-- sku - String, Unique, Not Null 
+- sku - Varchar, Unique, Not Null 
 - is_active - Boolean, Default true 
 - version - Integer, Default 1 
 - deleted_at - Timestamp, Nullable
@@ -155,8 +161,8 @@
 - total_amount - Decimal(10,2), Not Null 
 - total_fee - Decimal(10,2), Not Null 
 - status - Enum ('PENDING', 'PAID', 'SHIPPED', 'CANCELLED', 'COMPLETED')
-- shipping_address - Text, Not Null 
-- tracking_number - String, Nullable 
+- shipping_address - Varchar, Not Null 
+- tracking_number - Varchar, Nullable 
 - created_at - Timestamp
 
 **order_items**
@@ -171,9 +177,9 @@
 - id - PK, Serial 
 - order_id - FK (to orders.id)
 - amount - Decimal(10,2), Not Null 
-- payment_method - String, Not Null 
+- payment_method - Varchar, Not Null 
 - status - Enum ('PENDING', 'SUCCESS', 'FAILED')
-- transaction_id - String, Nullable 
+- transaction_id - Varchar, Nullable 
 - created_at - Timestamp
 
 **reviews**
@@ -206,7 +212,6 @@ Users - Reviews (1:N): Користувач може залишити багат
 Products - Reviews (1:N): Товар може мати багато відгуків від різних користувачів.
 
 ## 3.Бізнес-правила та Припущення
-ізнес-правила та Припущення
 1. Унікальність даних: Email користувача, SKU товару та Slug категорії повинні бути унікальними в системі. 
 2. Soft Delete: Видалення користувачів або товарів не призводить до їх фізичного знищення з бази даних (для збереження історії замовлень), а лише встановлює мітку часу в полі deleted_at. 
 3. Фіксація цін (Snapshotting): При створенні замовлення ціна товару фіксується в order_items. Подальша зміна ціни товару продавцем не впливає на вже створені замовлення. 
