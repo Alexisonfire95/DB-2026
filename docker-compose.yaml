@@ -1,0 +1,13 @@
+services:
+  db:
+    container_name: labs26.database
+    image: postgres:16.4-alpine
+    restart: always
+    environment:
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}
+    ports:
+      - "${DB_PORT}:${DB_PORT}"
+    volumes:
+      - ./data/psql:/var/lib/postgresql/data
