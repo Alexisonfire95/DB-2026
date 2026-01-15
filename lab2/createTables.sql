@@ -89,7 +89,7 @@ CREATE TABLE order_items (
     order_id INTEGER NOT NULL,
     product_id INTEGER NOT NULL,
     quantity INTEGER NOT NULL CHECK (quantity > 0),
-    price_at_purchase NUMERIC(10, 2) NOT NULL CHECK (price_at_purchase >= 0),  -- >= 0 для акцій
+    price_at_purchase NUMERIC(10, 2) NOT NULL CHECK (price_at_purchase > 0),
     CONSTRAINT fk_order_items_order FOREIGN KEY (order_id) REFERENCES orders(id) ON DELETE CASCADE,
     CONSTRAINT fk_order_items_product FOREIGN KEY (product_id) REFERENCES products(id)
 );
@@ -97,7 +97,7 @@ CREATE TABLE order_items (
 CREATE TABLE payments (
     id SERIAL PRIMARY KEY,
     order_id INTEGER NOT NULL,
-    amount NUMERIC(12, 2) NOT NULL CHECK (amount > 0),  -- Платіж завжди > 0
+    amount NUMERIC(12, 2) NOT NULL CHECK (amount > 0),
     status VARCHAR(20) NOT NULL CHECK (status IN ('PENDING', 'SUCCESS', 'FAILED')),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT fk_payments_order FOREIGN KEY (order_id) REFERENCES orders(id)
@@ -106,10 +106,13 @@ CREATE TABLE payments (
 CREATE TABLE shipments (
     id SERIAL PRIMARY KEY,
     order_id INTEGER NOT NULL UNIQUE,
-    address_id INTEGER,
+    country VARCHAR(100) NOT NULL,
+    city VARCHAR(100) NOT NULL,
+    street_line VARCHAR(255) NOT NULL,
+    zip_code VARCHAR(20) NOT NULL,
+    tracking_number VARCHAR(100),
     status VARCHAR(20) NOT NULL CHECK (status IN ('PENDING', 'SHIPPED', 'DELIVERED', 'FAILED')),
-    CONSTRAINT fk_shipments_order FOREIGN KEY (order_id) REFERENCES orders(id),
-    CONSTRAINT fk_shipments_address FOREIGN KEY (address_id) REFERENCES addresses(id) ON DELETE SET NULL
+    CONSTRAINT fk_shipments_order FOREIGN KEY (order_id) REFERENCES orders(id)
 );
 
 CREATE TABLE reviews (

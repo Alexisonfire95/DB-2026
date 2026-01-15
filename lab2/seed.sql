@@ -46,13 +46,13 @@ INSERT INTO product_price_history (product_id, price, changed_at) VALUES
 
 INSERT INTO orders (buyer_id, total_amount, status) VALUES
     (1, 1950.00, 'PAID'),
-    (1, 2000.00, 'PENDING'), 
+    (1, 2000.00, 'PENDING'),
     (2, 700.00, 'DELIVERED'),
     (2, 1800.00, 'SHIPPED');
 
 INSERT INTO order_items (order_id, product_id, quantity, price_at_purchase) VALUES
     (1, 1, 1, 1000.00),
-    (1, 2, 1, 950.00), 
+    (1, 2, 1, 950.00),
     (2, 3, 1, 2000.00),
     (3, 5, 1, 700.00),
     (4, 4, 1, 1800.00);
@@ -63,10 +63,39 @@ INSERT INTO payments (order_id, amount, status) VALUES
     (3, 700.00, 'SUCCESS'),
     (4, 1800.00, 'SUCCESS');
 
-INSERT INTO shipments (order_id, address_id, status) VALUES
-    (1, 1, 'SHIPPED'),
-    (3, 3, 'DELIVERED'),
-    (4, 3, 'SHIPPED');
+INSERT INTO shipments (order_id, country, city, street_line, zip_code, tracking_number, status)
+SELECT
+  1,
+  country,
+  city,
+  street_line,
+  zip_code,
+  'NP20450239523459',
+  'SHIPPED'
+FROM addresses WHERE id = 1
+
+UNION ALL
+
+SELECT
+  2, 'Ukraine', 'Kyiv', 'Lesi Ukrainky Blvd 10',
+  '01133', NULL, 'PENDING'
+UNION ALL
+
+SELECT
+  3,
+  country,
+  city,
+  street_line,
+  zip_code,
+  'NP55550239523459',
+  'DELIVERED'
+FROM addresses WHERE id = 3
+
+UNION ALL
+
+SELECT
+  4, 'Ukraine', 'Odesa', 'Nova Poshta Branch 5',
+  '65000', 'NP99990239523459', 'SHIPPED';
 
 INSERT INTO reviews (product_id, buyer_id, rating, comment) VALUES
     (1, 1, 5, 'Great phone! Excellent camera and performance.'),
