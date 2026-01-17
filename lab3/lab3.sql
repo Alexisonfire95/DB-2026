@@ -1,4 +1,4 @@
--- 1. Реєстрація нового користувача, з поверненням id та емейу створеного юзера
+-- 1. Реєстрація нового користувача, з поверненням id та емейл створеного юзера
 INSERT INTO users (email, password_hash)
 VALUES ('new_email1@gmail.com', 'sicret_pass1')
 RETURNING id, email;
@@ -54,7 +54,7 @@ UPDATE products SET stock_quantity = stock_quantity - 1 WHERE id = 2;
 
 UPDATE orders SET total_amount = (
   SELECT SUM(quantity * price_at_purchase)
-  FROM order_items  
+  FROM order_items
   WHERE order_id = currval('orders_id_seq')
 )
 WHERE id = currval('orders_id_seq');
