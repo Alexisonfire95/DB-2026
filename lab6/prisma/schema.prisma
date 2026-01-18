@@ -1,0 +1,198 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model addresses {
+  id          Int         @id @default(autoincrement())
+  user_id     Int
+  country     String      @db.VarChar(100)
+  city        String      @db.VarChar(100)
+  street_line String      @db.VarChar(255)
+  zip_code    String      @db.VarChar(20)
+  is_default  Boolean?    @default(false)
+  users       users       @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_addresses_user")
+  shipments   shipments[]
+}
+
+model administrators {
+  id           Int                @id @default(autoincrement())
+  user_id      Int                @unique
+  first_name   String             @db.VarChar(100)
+  last_name    String             @db.VarChar(100)
+  access_level admin_access_level
+  users        users              @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_administrators_user")
+}
+
+model buyers {
+  id         Int       @id @default(autoincrement())
+  user_id    Int       @unique
+  first_name String    @db.VarChar(100)
+  last_name  String    @db.VarChar(100)
+  phone      String?   @db.VarChar(20)
+  users      users     @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_buyers_user")
+  orders     orders[]
+  reviews    reviews[]
+  wishlists  wishlists[]
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model categories {
+  id               Int          @id @default(autoincrement())
+  parent_id        Int?
+  name             String       @db.VarChar(100)
+  categories       categories?  @relation("categoriesTocategories", fields: [parent_id], references: [id], onUpdate: NoAction, map: "fk_categories_parent")
+  other_categories categories[] @relation("categoriesTocategories")
+  products         products[]
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model order_items {
+  id                Int      @id @default(autoincrement())
+  order_id          Int
+  product_id        Int
+  quantity          Int
+  price_at_purchase Decimal  @db.Decimal(10, 2)
+  orders            orders   @relation(fields: [order_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_order_items_order")
+  products          products @relation(fields: [product_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_order_items_product")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model orders {
+  id           Int           @id @default(autoincrement())
+  buyer_id     Int
+  total_amount Decimal       @default(0) @db.Decimal(12, 2)
+  status       order_status
+  created_at   DateTime?     @default(now()) @db.Timestamp(6)
+  order_items  order_items[]
+  buyers       buyers        @relation(fields: [buyer_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_orders_buyer")
+  payments     payments[]
+  shipments    shipments?
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model payments {
+  id         Int            @id @default(autoincrement())
+  order_id   Int
+  amount     Decimal        @db.Decimal(12, 2)
+  status     payment_status
+  created_at DateTime?      @default(now()) @db.Timestamp(6)
+  orders     orders         @relation(fields: [order_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_payments_order")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model product_price_history {
+  id         Int       @id @default(autoincrement())
+  product_id Int
+  price      Decimal   @db.Decimal(10, 2)
+  changed_at DateTime? @default(now()) @db.Timestamp(6)
+  products   products  @relation(fields: [product_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_price_history_product")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model products {
+  id                    Int                     @id @default(autoincrement())
+  seller_id             Int
+  category_id           Int
+  name                  String                  @db.VarChar(200)
+  price                 Decimal                 @db.Decimal(10, 2)
+  stock_quantity        Int                     @default(0)
+  sku                   String                  @unique @db.VarChar(50)
+  is_active             Boolean?                @default(true)
+  version               Int?                    @default(1)
+  deleted_at            DateTime?               @db.Timestamp(6)
+  order_items           order_items[]
+  product_price_history product_price_history[]
+  categories            categories              @relation(fields: [category_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_products_category")
+  sellers               sellers                 @relation(fields: [seller_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_products_seller")
+  reviews               reviews[]
+  wishlists  wishlists[]
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model reviews {
+  id         Int       @id @default(autoincrement())
+  product_id Int
+  buyer_id   Int
+  rating     Int
+  comment    String?
+  likes      Int       @default(0)
+  created_at DateTime? @default(now()) @db.Timestamp(6)
+  buyers     buyers    @relation(fields: [buyer_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_reviews_buyer")
+  products   products  @relation(fields: [product_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_reviews_product")
+
+  @@unique([product_id, buyer_id])
+}
+
+model sellers {
+  id          Int        @id @default(autoincrement())
+  user_id     Int        @unique
+  store_name  String     @unique @db.VarChar(100)
+  tax_id      String     @unique @db.VarChar(50)
+  iban        String     @db.VarChar(34)
+  is_verified Boolean?   @default(false)
+  products    products[]
+  users       users      @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_sellers_user")
+}
+
+model shipments {
+  id         Int             @id @default(autoincrement())
+  order_id   Int             @unique
+  address_id Int
+  status     shipment_status
+  addresses  addresses       @relation(fields: [address_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_shipments_address")
+  orders     orders          @relation(fields: [order_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_shipments_order")
+}
+
+model users {
+  id             Int             @id @default(autoincrement())
+  email          String          @unique @db.VarChar(255)
+  password_hash  String          @db.VarChar(255)
+  created_at     DateTime?       @default(now()) @db.Timestamp(6)
+  deleted_at     DateTime?       @db.Timestamp(6)
+  addresses      addresses[]
+  administrators administrators?
+  buyers         buyers?
+  sellers        sellers?
+}
+
+model wishlists {
+  id         Int      @id @default(autoincrement())
+  buyer_id   Int
+  product_id Int
+  created_at DateTime @default(now())
+  buyer      buyers    @relation(fields: [buyer_id], references: [id])
+  product    products @relation(fields: [product_id], references: [id])
+  @@unique([buyer_id, product_id])
+}
+
+enum admin_access_level {
+  SUPER
+  MODERATOR
+}
+
+enum order_status {
+  PENDING
+  PAID
+  SHIPPED
+  DELIVERED
+  CANCELLED
+}
+
+enum payment_status {
+  PENDING
+  SUCCESS
+  FAILED
+}
+
+enum shipment_status {
+  PENDING
+  SHIPPED
+  DELIVERED
+  FAILED
+}
